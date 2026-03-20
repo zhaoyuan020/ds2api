@@ -79,6 +79,10 @@
       "destination": "/api/index"
     },
     {
+      "source": "/admin/version",
+      "destination": "/api/index"
+    },
+    {
       "source": "/admin",
       "destination": "/admin/index.html"
     },
