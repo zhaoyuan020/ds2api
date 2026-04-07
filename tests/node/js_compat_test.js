@@ -31,7 +31,6 @@ test('js compat: sse fixtures', () => {
     assert.equal(got.finished, expected.finished, `${name}: finished mismatch`);
     assert.equal(got.newType, expected.new_type, `${name}: newType mismatch`);
     assert.equal(Boolean(got.contentFilter), Boolean(expected.content_filter), `${name}: contentFilter mismatch`);
-    assert.equal(Number(got.outputTokens || 0), Number(expected.output_tokens || 0), `${name}: outputTokens mismatch`);
     assert.equal(got.errorMessage || '', expected.error_message || '', `${name}: errorMessage mismatch`);
   }
 });

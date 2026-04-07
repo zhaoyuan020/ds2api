@@ -131,19 +131,6 @@ func (h *Handler) handleNonStream(w http.ResponseWriter, ctx context.Context, re
 		return
 	}
 	respBody := openaifmt.BuildChatCompletion(completionID, model, finalPrompt, finalThinking, finalText, toolNames)
-	if result.PromptTokens > 0 || result.OutputTokens > 0 {
-		if usage, ok := respBody["usage"].(map[string]any); ok {
-			if result.PromptTokens > 0 {
-				usage["prompt_tokens"] = result.PromptTokens
-			}
-			if result.OutputTokens > 0 {
-				usage["completion_tokens"] = result.OutputTokens
-			}
-			p, _ := usage["prompt_tokens"].(int)
-			c, _ := usage["completion_tokens"].(int)
-			usage["total_tokens"] = p + c
-		}
-	}
 	writeJSON(w, http.StatusOK, respBody)
 }
 

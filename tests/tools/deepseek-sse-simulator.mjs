@@ -20,7 +20,7 @@ function parseArgs(argv) {
     failOnReferenceLeak: true,
     failOnMissingFinish: true,
     failOnBaselineMismatch: true,
-    failOnTokenMismatch: true,
+    failOnTokenMismatch: false,
     showOutput: false,
     writeReplayText: false,
   };
@@ -44,6 +44,8 @@ function parseArgs(argv) {
       out.failOnMissingFinish = false;
     } else if (a === '--no-fail-on-baseline-mismatch' || a === '--no-fail-on-processed-mismatch') {
       out.failOnBaselineMismatch = false;
+    } else if (a === '--fail-on-token-mismatch') {
+      out.failOnTokenMismatch = true;
     } else if (a === '--no-fail-on-token-mismatch') {
       out.failOnTokenMismatch = false;
     } else if (a === '--show-output') {

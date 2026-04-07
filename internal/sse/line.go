@@ -10,8 +10,6 @@ type LineResult struct {
 	ErrorMessage  string
 	Parts         []ContentPart
 	NextType      string
-	PromptTokens  int
-	OutputTokens  int
 }
 
 // ParseDeepSeekContentLine centralizes one-line DeepSeek SSE parsing for both
@@ -21,9 +19,8 @@ func ParseDeepSeekContentLine(raw []byte, thinkingEnabled bool, currentType stri
 	if !parsed {
 		return LineResult{NextType: currentType}
 	}
-	promptTokens, outputTokens := extractAccumulatedTokenUsage(chunk)
 	if done {
-		return LineResult{Parsed: true, Stop: true, NextType: currentType, PromptTokens: promptTokens, OutputTokens: outputTokens}
+		return LineResult{Parsed: true, Stop: true, NextType: currentType}
 	}
 	if errObj, hasErr := chunk["error"]; hasErr {
 		return LineResult{
@@ -31,8 +28,6 @@ func ParseDeepSeekContentLine(raw []byte, thinkingEnabled bool, currentType stri
 			Stop:         true,
 			ErrorMessage: fmt.Sprintf("%v", errObj),
 			NextType:     currentType,
-			PromptTokens: promptTokens,
-			OutputTokens: outputTokens,
 		}
 	}
 	if code, _ := chunk["code"].(string); code == "content_filter" {
@@ -41,8 +36,6 @@ func ParseDeepSeekContentLine(raw []byte, thinkingEnabled bool, currentType stri
 			Stop:          true,
 			ContentFilter: true,
 			NextType:      currentType,
-			PromptTokens:  promptTokens,
-			OutputTokens:  outputTokens,
 		}
 	}
 	if hasContentFilterStatus(chunk) {
@@ -51,18 +44,14 @@ func ParseDeepSeekContentLine(raw []byte, thinkingEnabled bool, currentType stri
 			Stop:          true,
 			ContentFilter: true,
 			NextType:      currentType,
-			PromptTokens:  promptTokens,
-			OutputTokens:  outputTokens,
 		}
 	}
 	parts, finished, nextType := ParseSSEChunkForContent(chunk, thinkingEnabled, currentType)
 	parts = filterLeakedContentFilterParts(parts)
 	return LineResult{
-		Parsed:       true,
-		Stop:         finished,
-		Parts:        parts,
-		NextType:     nextType,
-		PromptTokens: promptTokens,
-		OutputTokens: outputTokens,
+		Parsed:   true,
+		Stop:     finished,
+		Parts:    parts,
+		NextType: nextType,
 	}
 }

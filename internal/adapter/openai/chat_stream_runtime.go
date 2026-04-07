@@ -37,8 +37,6 @@ type chatStreamRuntime struct {
 	streamToolNames   map[int]string
 	thinking          strings.Builder
 	text              strings.Builder
-	promptTokens      int
-	outputTokens      int
 }
 
 func newChatStreamRuntime(
@@ -171,17 +169,6 @@ func (s *chatStreamRuntime) finalize(finishReason string) {
 		finishReason = "tool_calls"
 	}
 	usage := openaifmt.BuildChatUsage(s.finalPrompt, finalThinking, finalText)
-	if s.promptTokens > 0 {
-		usage["prompt_tokens"] = s.promptTokens
-	}
-	if s.outputTokens > 0 {
-		usage["completion_tokens"] = s.outputTokens
-	}
-	if s.promptTokens > 0 || s.outputTokens > 0 {
-		p := usage["prompt_tokens"].(int)
-		c := usage["completion_tokens"].(int)
-		usage["total_tokens"] = p + c
-	}
 	s.sendChunk(openaifmt.BuildChatStreamChunk(
 		s.completionID,
 		s.created,
@@ -195,12 +182,6 @@ func (s *chatStreamRuntime) finalize(finishReason string) {
 func (s *chatStreamRuntime) onParsed(parsed sse.LineResult) streamengine.ParsedDecision {
 	if !parsed.Parsed {
 		return streamengine.ParsedDecision{}
-	}
-	if parsed.PromptTokens > 0 {
-		s.promptTokens = parsed.PromptTokens
-	}
-	if parsed.OutputTokens > 0 {
-		s.outputTokens = parsed.OutputTokens
 	}
 	if parsed.ContentFilter {
 		return streamengine.ParsedDecision{Stop: true, StopReason: streamengine.StopReasonHandlerRequested}

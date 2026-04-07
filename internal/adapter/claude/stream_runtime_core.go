@@ -24,10 +24,9 @@ type claudeStreamRuntime struct {
 	bufferToolContent     bool
 	stripReferenceMarkers bool
 
-	messageID    string
-	thinking     strings.Builder
-	text         strings.Builder
-	outputTokens int
+	messageID string
+	thinking  strings.Builder
+	text      strings.Builder
 
 	nextBlockIndex     int
 	thinkingBlockOpen  bool
@@ -69,9 +68,6 @@ func newClaudeStreamRuntime(
 func (s *claudeStreamRuntime) onParsed(parsed sse.LineResult) streamengine.ParsedDecision {
 	if !parsed.Parsed {
 		return streamengine.ParsedDecision{}
-	}
-	if parsed.OutputTokens > 0 {
-		s.outputTokens = parsed.OutputTokens
 	}
 	if parsed.ErrorMessage != "" {
 		s.upstreamErr = parsed.ErrorMessage

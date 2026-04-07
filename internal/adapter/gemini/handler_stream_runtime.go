@@ -65,9 +65,8 @@ type geminiStreamRuntime struct {
 	stripReferenceMarkers bool
 	toolNames             []string
 
-	thinking     strings.Builder
-	text         strings.Builder
-	outputTokens int
+	thinking strings.Builder
+	text     strings.Builder
 }
 
 //nolint:unused // retained for native Gemini stream handling path.
@@ -111,9 +110,6 @@ func (s *geminiStreamRuntime) sendChunk(payload map[string]any) {
 func (s *geminiStreamRuntime) onParsed(parsed sse.LineResult) streamengine.ParsedDecision {
 	if !parsed.Parsed {
 		return streamengine.ParsedDecision{}
-	}
-	if parsed.OutputTokens > 0 {
-		s.outputTokens = parsed.OutputTokens
 	}
 	if parsed.ContentFilter || parsed.ErrorMessage != "" || parsed.Stop {
 		return streamengine.ParsedDecision{Stop: true}
@@ -198,6 +194,6 @@ func (s *geminiStreamRuntime) finalize() {
 			},
 		},
 		"modelVersion":  s.model,
-		"usageMetadata": buildGeminiUsage(s.finalPrompt, finalThinking, finalText, s.outputTokens),
+		"usageMetadata": buildGeminiUsage(s.finalPrompt, finalThinking, finalText),
 	})
 }

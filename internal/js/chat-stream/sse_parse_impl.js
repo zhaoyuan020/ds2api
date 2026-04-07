@@ -443,70 +443,10 @@ function hasContentFilterStatusValue(v) {
 }
 
 function extractAccumulatedTokenUsage(chunk) {
-  const usage = findAccumulatedTokenUsage(chunk);
-  return usage || { prompt: 0, output: 0 };
-}
-
-function findAccumulatedTokenUsage(v) {
-  if (Array.isArray(v)) {
-    for (const item of v) {
-      const u = findAccumulatedTokenUsage(item);
-      if (u) return u;
-    }
-    return null;
-  }
-  if (!v || typeof v !== 'object') {
-    return null;
-  }
-  const pathValue = asString(v.p);
-  if (pathValue && pathValue.toLowerCase().includes('accumulated_token_usage')) {
-    const n = toInt(v.v);
-    if (n > 0) {
-      return { prompt: 0, output: n };
-    }
-  }
-  if (pathValue && pathValue.toLowerCase().includes('token_usage')) {
-    const u = v.v;
-    if (u && typeof u === 'object') {
-      const p = toInt(u.prompt_tokens);
-      const c = toInt(u.completion_tokens);
-      if (p > 0 || c > 0) {
-        return { prompt: p, output: c };
-      }
-    }
-  }
-  const direct = toInt(v.accumulated_token_usage);
-  if (direct > 0) {
-    return { prompt: 0, output: direct };
-  }
-  if (v.token_usage && typeof v.token_usage === 'object') {
-    const p = toInt(v.token_usage.prompt_tokens);
-    const c = toInt(v.token_usage.completion_tokens);
-    if (p > 0 || c > 0) {
-      return { prompt: p, output: c };
-    }
-  }
-  for (const value of Object.values(v)) {
-    const u = findAccumulatedTokenUsage(value);
-    if (u) return u;
-  }
-  return null;
-}
-
-function toInt(v) {
-  if (typeof v === 'number' && Number.isFinite(v)) {
-    return Math.trunc(v);
-  }
-  if (typeof v === 'string' && v.trim() !== '') {
-    const n = Number(v);
-    if (Number.isFinite(n)) {
-      return Math.trunc(n);
-    }
-  }
-  if (typeof v !== 'number') {
-    return 0;
-  }
-  return Number.isFinite(v) ? Math.trunc(v) : 0;
+  // 临时策略：忽略上游 usage 字段（accumulated_token_usage / token_usage），
+  // 统一使用内部估算计数，避免上下文累计口径误差。
+  void chunk;
+  return { prompt: 0, output: 0 };
 }
 
 function formatErrorMessage(v) {

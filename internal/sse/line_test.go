@@ -26,16 +26,13 @@ func TestParseDeepSeekContentLineContentFilter(t *testing.T) {
 	}
 }
 
-func TestParseDeepSeekContentLineContentFilterCodeIncludesOutputTokens(t *testing.T) {
+func TestParseDeepSeekContentLineContentFilterCodeStops(t *testing.T) {
 	res := ParseDeepSeekContentLine(
 		[]byte(`data: {"code":"content_filter","accumulated_token_usage":99}`),
 		false, "text",
 	)
 	if !res.Parsed || !res.Stop || !res.ContentFilter {
 		t.Fatalf("expected content-filter stop result: %#v", res)
-	}
-	if res.OutputTokens != 99 {
-		t.Fatalf("expected output token usage 99, got %d", res.OutputTokens)
 	}
 }
 
@@ -46,27 +43,24 @@ func TestParseDeepSeekContentLineContentFilterStatus(t *testing.T) {
 	}
 }
 
-func TestParseDeepSeekContentLineCapturesAccumulatedTokenUsage(t *testing.T) {
+func TestParseDeepSeekContentLineIgnoresAccumulatedTokenUsage(t *testing.T) {
 	res := ParseDeepSeekContentLine([]byte(`data: {"p":"response","o":"BATCH","v":[{"p":"accumulated_token_usage","v":1383},{"p":"quasi_status","v":"FINISHED"}]}`), false, "text")
-	if res.OutputTokens != 1383 {
-		t.Fatalf("expected output token usage 1383, got %d", res.OutputTokens)
+	if !res.Parsed {
+		t.Fatalf("expected parsed result")
 	}
 }
 
-func TestParseDeepSeekContentLineCapturesAccumulatedTokenUsageString(t *testing.T) {
+func TestParseDeepSeekContentLineIgnoresAccumulatedTokenUsageString(t *testing.T) {
 	res := ParseDeepSeekContentLine([]byte(`data: {"p":"response","o":"BATCH","v":[{"p":"accumulated_token_usage","v":"190"},{"p":"quasi_status","v":"FINISHED"}]}`), false, "text")
-	if res.OutputTokens != 190 {
-		t.Fatalf("expected output token usage 190, got %d", res.OutputTokens)
+	if !res.Parsed {
+		t.Fatalf("expected parsed result")
 	}
 }
 
-func TestParseDeepSeekContentLineErrorIncludesOutputTokens(t *testing.T) {
+func TestParseDeepSeekContentLineErrorStops(t *testing.T) {
 	res := ParseDeepSeekContentLine([]byte(`data: {"error":"boom","accumulated_token_usage":123}`), false, "text")
 	if !res.Parsed || !res.Stop {
 		t.Fatalf("expected stop on error: %#v", res)
-	}
-	if res.OutputTokens != 123 {
-		t.Fatalf("expected output token usage 123 on error, got %d", res.OutputTokens)
 	}
 }
 

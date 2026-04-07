@@ -149,14 +149,13 @@ func (h *Handler) handleNonStreamGenerateContent(w http.ResponseWriter, resp *ht
 		cleanVisibleOutput(result.Thinking, stripReferenceMarkers),
 		cleanVisibleOutput(result.Text, stripReferenceMarkers),
 		toolNames,
-		result.OutputTokens,
 	))
 }
 
 //nolint:unused // retained for native Gemini non-stream handling path.
-func buildGeminiGenerateContentResponse(model, finalPrompt, finalThinking, finalText string, toolNames []string, outputTokens int) map[string]any {
+func buildGeminiGenerateContentResponse(model, finalPrompt, finalThinking, finalText string, toolNames []string) map[string]any {
 	parts := buildGeminiPartsFromFinal(finalText, finalThinking, toolNames)
-	usage := buildGeminiUsage(finalPrompt, finalThinking, finalText, outputTokens)
+	usage := buildGeminiUsage(finalPrompt, finalThinking, finalText)
 	return map[string]any{
 		"candidates": []map[string]any{
 			{
@@ -174,14 +173,10 @@ func buildGeminiGenerateContentResponse(model, finalPrompt, finalThinking, final
 }
 
 //nolint:unused // retained for native Gemini non-stream handling path.
-func buildGeminiUsage(finalPrompt, finalThinking, finalText string, outputTokens int) map[string]any {
+func buildGeminiUsage(finalPrompt, finalThinking, finalText string) map[string]any {
 	promptTokens := util.EstimateTokens(finalPrompt)
 	reasoningTokens := util.EstimateTokens(finalThinking)
 	completionTokens := util.EstimateTokens(finalText)
-	if outputTokens > 0 {
-		completionTokens = outputTokens
-		reasoningTokens = 0
-	}
 	return map[string]any{
 		"promptTokenCount":     promptTokens,
 		"candidatesTokenCount": reasoningTokens + completionTokens,

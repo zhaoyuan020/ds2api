@@ -109,9 +109,6 @@ func (s *claudeStreamRuntime) finalize(stopReason string) {
 	}
 
 	outputTokens := util.EstimateTokens(finalThinking) + util.EstimateTokens(finalText)
-	if s.outputTokens > 0 {
-		outputTokens = s.outputTokens
-	}
 	s.send("message_delta", map[string]any{
 		"type": "message_delta",
 		"delta": map[string]any{

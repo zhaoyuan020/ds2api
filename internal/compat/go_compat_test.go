@@ -37,7 +37,6 @@ func TestGoCompatSSEFixtures(t *testing.T) {
 			Finished      bool             `json:"finished"`
 			NewType       string           `json:"new_type"`
 			ContentFilter bool             `json:"content_filter"`
-			OutputTokens  int              `json:"output_tokens"`
 			ErrorMessage  string           `json:"error_message"`
 		}
 		mustLoadJSON(t, expectedPath, &expected)
@@ -58,11 +57,10 @@ func TestGoCompatSSEFixtures(t *testing.T) {
 			res.Stop != expected.Finished ||
 			res.NextType != expected.NewType ||
 			res.ContentFilter != expected.ContentFilter ||
-			res.OutputTokens != expected.OutputTokens ||
 			res.ErrorMessage != expected.ErrorMessage {
-			t.Fatalf("fixture %s mismatch:\n got parts=%#v finished=%v newType=%q contentFilter=%v outputTokens=%d errorMessage=%q\nwant parts=%#v finished=%v newType=%q contentFilter=%v outputTokens=%d errorMessage=%q",
-				name, gotParts, res.Stop, res.NextType, res.ContentFilter, res.OutputTokens, res.ErrorMessage,
-				expected.Parts, expected.Finished, expected.NewType, expected.ContentFilter, expected.OutputTokens, expected.ErrorMessage)
+			t.Fatalf("fixture %s mismatch:\n got parts=%#v finished=%v newType=%q contentFilter=%v errorMessage=%q\nwant parts=%#v finished=%v newType=%q contentFilter=%v errorMessage=%q",
+				name, gotParts, res.Stop, res.NextType, res.ContentFilter, res.ErrorMessage,
+				expected.Parts, expected.Finished, expected.NewType, expected.ContentFilter, expected.ErrorMessage)
 		}
 	}
 }

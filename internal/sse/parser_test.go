@@ -19,20 +19,6 @@ func TestParseDeepSeekSSELineDone(t *testing.T) {
 	}
 }
 
-func TestExtractTokenUsage(t *testing.T) {
-	chunk := map[string]any{
-		"p": "response/token_usage",
-		"v": map[string]any{
-			"prompt_tokens":     123,
-			"completion_tokens": 456,
-		},
-	}
-	p, c := extractAccumulatedTokenUsage(chunk)
-	if p != 123 || c != 456 {
-		t.Fatalf("expected 123/456, got %d/%d", p, c)
-	}
-}
-
 func TestParseSSEChunkForContentSimple(t *testing.T) {
 	parts, finished, _ := ParseSSEChunkForContent(map[string]any{"v": "hello"}, false, "text")
 	if finished {

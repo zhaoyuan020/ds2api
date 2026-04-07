@@ -239,7 +239,7 @@ func TestChatCompletionsStreamContentFilterStopsNormallyWithoutLeak(t *testing.T
 	}
 }
 
-func TestResponsesStreamUsageOverridesFromBatchAccumulatedTokenUsage(t *testing.T) {
+func TestResponsesStreamUsageIgnoresBatchAccumulatedTokenUsage(t *testing.T) {
 	statuses := make([]int, 0, 1)
 	h := &Handler{
 		Store: mockOpenAIConfig{wideInput: true},
@@ -282,12 +282,12 @@ func TestResponsesStreamUsageOverridesFromBatchAccumulatedTokenUsage(t *testing.
 	if usage == nil {
 		t.Fatalf("expected usage in response payload, got %#v", resp)
 	}
-	if got, _ := usage["output_tokens"].(float64); int(got) != 190 {
-		t.Fatalf("expected output_tokens=190, got %#v", usage["output_tokens"])
+	if got, _ := usage["output_tokens"].(float64); int(got) == 190 {
+		t.Fatalf("expected upstream accumulated token usage to be ignored, got %#v", usage["output_tokens"])
 	}
 }
 
-func TestResponsesNonStreamUsageOverridesPromptAndOutputTokenUsage(t *testing.T) {
+func TestResponsesNonStreamUsageIgnoresPromptAndOutputTokenUsage(t *testing.T) {
 	statuses := make([]int, 0, 1)
 	h := &Handler{
 		Store: mockOpenAIConfig{wideInput: true},
@@ -322,13 +322,13 @@ func TestResponsesNonStreamUsageOverridesPromptAndOutputTokenUsage(t *testing.T)
 	if usage == nil {
 		t.Fatalf("expected usage object, got %#v", out)
 	}
-	if got, _ := usage["input_tokens"].(float64); int(got) != 11 {
-		t.Fatalf("expected input_tokens=11, got %#v", usage["input_tokens"])
+	input, _ := usage["input_tokens"].(float64)
+	output, _ := usage["output_tokens"].(float64)
+	total, _ := usage["total_tokens"].(float64)
+	if int(output) == 29 {
+		t.Fatalf("expected upstream completion token usage to be ignored, got %#v", usage["output_tokens"])
 	}
-	if got, _ := usage["output_tokens"].(float64); int(got) != 29 {
-		t.Fatalf("expected output_tokens=29, got %#v", usage["output_tokens"])
-	}
-	if got, _ := usage["total_tokens"].(float64); int(got) != 40 {
-		t.Fatalf("expected total_tokens=40, got %#v", usage["total_tokens"])
+	if int(total) != int(input)+int(output) {
+		t.Fatalf("expected total_tokens=input_tokens+output_tokens, usage=%#v", usage)
 	}
 }

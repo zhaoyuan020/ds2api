@@ -12,8 +12,6 @@ import (
 type CollectResult struct {
 	Text          string
 	Thinking      string
-	PromptTokens  int
-	OutputTokens  int
 	ContentFilter bool
 }
 
@@ -29,8 +27,6 @@ func CollectStream(resp *http.Response, thinkingEnabled bool, closeBody bool) Co
 	}
 	text := strings.Builder{}
 	thinking := strings.Builder{}
-	promptTokens := 0
-	outputTokens := 0
 	contentFilter := false
 	currentType := "text"
 	if thinkingEnabled {
@@ -41,12 +37,6 @@ func CollectStream(resp *http.Response, thinkingEnabled bool, closeBody bool) Co
 		currentType = result.NextType
 		if !result.Parsed {
 			return true
-		}
-		if result.PromptTokens > 0 {
-			promptTokens = result.PromptTokens
-		}
-		if result.OutputTokens > 0 {
-			outputTokens = result.OutputTokens
 		}
 		if result.Stop {
 			if result.ContentFilter {
@@ -68,8 +58,6 @@ func CollectStream(resp *http.Response, thinkingEnabled bool, closeBody bool) Co
 	return CollectResult{
 		Text:          text.String(),
 		Thinking:      thinking.String(),
-		PromptTokens:  promptTokens,
-		OutputTokens:  outputTokens,
 		ContentFilter: contentFilter,
 	}
 }

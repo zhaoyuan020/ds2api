@@ -11,8 +11,8 @@ import (
 	trans "ds2api/internal/deepseek/transport"
 )
 
-func (c *Client) postJSON(ctx context.Context, doer trans.Doer, url string, headers map[string]string, payload any) (map[string]any, error) {
-	body, status, err := c.postJSONWithStatus(ctx, doer, url, headers, payload)
+func (c *Client) postJSON(ctx context.Context, doer trans.Doer, fallback trans.Doer, url string, headers map[string]string, payload any) (map[string]any, error) {
+	body, status, err := c.postJSONWithStatus(ctx, doer, fallback, url, headers, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func (c *Client) postJSON(ctx context.Context, doer trans.Doer, url string, head
 	return body, nil
 }
 
-func (c *Client) postJSONWithStatus(ctx context.Context, doer trans.Doer, url string, headers map[string]string, payload any) (map[string]any, int, error) {
+func (c *Client) postJSONWithStatus(ctx context.Context, doer trans.Doer, fallback trans.Doer, url string, headers map[string]string, payload any) (map[string]any, int, error) {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return nil, 0, err
@@ -44,7 +44,7 @@ func (c *Client) postJSONWithStatus(ctx context.Context, doer trans.Doer, url st
 		for k, v := range headers {
 			req2.Header.Set(k, v)
 		}
-		resp, err = c.fallback.Do(req2)
+		resp, err = fallback.Do(req2)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -64,6 +64,7 @@ func (c *Client) postJSONWithStatus(ctx context.Context, doer trans.Doer, url st
 }
 
 func (c *Client) getJSONWithStatus(ctx context.Context, doer trans.Doer, url string, headers map[string]string) (map[string]any, int, error) {
+	clients := c.requestClientsFromContext(ctx)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
@@ -81,7 +82,7 @@ func (c *Client) getJSONWithStatus(ctx context.Context, doer trans.Doer, url str
 		for k, v := range headers {
 			req2.Header.Set(k, v)
 		}
-		resp, err = c.fallback.Do(req2)
+		resp, err = clients.fallback.Do(req2)
 		if err != nil {
 			return nil, 0, err
 		}

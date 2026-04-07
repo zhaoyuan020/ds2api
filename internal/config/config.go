@@ -1,8 +1,16 @@
 package config
 
+import (
+	"crypto/sha1"
+	"encoding/hex"
+	"fmt"
+	"strings"
+)
+
 type Config struct {
 	Keys             []string          `json:"keys,omitempty"`
 	Accounts         []Account         `json:"accounts,omitempty"`
+	Proxies          []Proxy           `json:"proxies,omitempty"`
 	ClaudeMapping    map[string]string `json:"claude_mapping,omitempty"`
 	ClaudeModelMap   map[string]string `json:"claude_model_mapping,omitempty"`
 	ModelAliases     map[string]string `json:"model_aliases,omitempty"`
@@ -22,6 +30,38 @@ type Account struct {
 	Mobile   string `json:"mobile,omitempty"`
 	Password string `json:"password,omitempty"`
 	Token    string `json:"token,omitempty"`
+	ProxyID  string `json:"proxy_id,omitempty"`
+}
+
+type Proxy struct {
+	ID       string `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Host     string `json:"host,omitempty"`
+	Port     int    `json:"port,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+func NormalizeProxy(p Proxy) Proxy {
+	p.ID = strings.TrimSpace(p.ID)
+	p.Name = strings.TrimSpace(p.Name)
+	p.Type = strings.ToLower(strings.TrimSpace(p.Type))
+	p.Host = strings.TrimSpace(p.Host)
+	p.Username = strings.TrimSpace(p.Username)
+	p.Password = strings.TrimSpace(p.Password)
+	if p.ID == "" {
+		p.ID = StableProxyID(p)
+	}
+	if p.Name == "" && p.Host != "" && p.Port > 0 {
+		p.Name = fmt.Sprintf("%s:%d", p.Host, p.Port)
+	}
+	return p
+}
+
+func StableProxyID(p Proxy) string {
+	sum := sha1.Sum([]byte(strings.ToLower(strings.TrimSpace(p.Type)) + "|" + strings.ToLower(strings.TrimSpace(p.Host)) + "|" + fmt.Sprintf("%d", p.Port) + "|" + strings.TrimSpace(p.Username)))
+	return "proxy_" + hex.EncodeToString(sum[:6])
 }
 
 func (c *Config) ClearAccountTokens() {
