@@ -195,6 +195,37 @@ func TestApplyHistorySplitSkipsFirstTurn(t *testing.T) {
 	}
 }
 
+func TestApplyHistorySplitCarriesHistoryText(t *testing.T) {
+	ds := &inlineUploadDSStub{}
+	h := &Handler{
+		Store: mockOpenAIConfig{
+			wideInput:           true,
+			historySplitEnabled: true,
+			historySplitTurns:   1,
+		},
+		DS: ds,
+	}
+	req := map[string]any{
+		"model":    "deepseek-chat",
+		"messages": historySplitTestMessages(),
+	}
+	stdReq, err := normalizeOpenAIChatRequest(h.Store, req, "")
+	if err != nil {
+		t.Fatalf("normalize failed: %v", err)
+	}
+
+	out, err := h.applyHistorySplit(context.Background(), &auth.RequestAuth{DeepSeekToken: "token"}, stdReq)
+	if err != nil {
+		t.Fatalf("apply history split failed: %v", err)
+	}
+	if len(ds.uploadCalls) != 1 {
+		t.Fatalf("expected 1 upload call, got %d", len(ds.uploadCalls))
+	}
+	if out.HistoryText != string(ds.uploadCalls[0].Data) {
+		t.Fatalf("expected history text to be preserved on normalized request")
+	}
+}
+
 func TestChatCompletionsHistorySplitUploadsHistoryAndKeepsLatestPrompt(t *testing.T) {
 	ds := &inlineUploadDSStub{}
 	h := &Handler{

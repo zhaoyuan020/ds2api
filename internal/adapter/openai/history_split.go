@@ -51,6 +51,7 @@ func (h *Handler) applyHistorySplit(ctx context.Context, a *auth.RequestAuth, st
 	}
 
 	stdReq.Messages = promptMessages
+	stdReq.HistoryText = historyText
 	stdReq.RefFileIDs = prependUniqueRefFileID(stdReq.RefFileIDs, fileID)
 	stdReq.FinalPrompt, stdReq.ToolNames = buildHistorySplitPrompt(promptMessages, reasoningContent, stdReq.ToolsRaw, stdReq.ToolChoice, stdReq.Thinking)
 	return stdReq, nil

@@ -271,3 +271,56 @@ func TestChatCompletionsSkipsHistoryWhenDisabled(t *testing.T) {
 		t.Fatalf("expected disabled history to stay empty, got %#v", snapshot.Items)
 	}
 }
+
+func TestChatCompletionsHistorySplitPersistsHistoryText(t *testing.T) {
+	historyStore := newTestChatHistoryStore(t)
+	ds := &inlineUploadDSStub{}
+	h := &Handler{
+		Store: mockOpenAIConfig{
+			wideInput:           true,
+			historySplitEnabled: true,
+			historySplitTurns:   1,
+		},
+		Auth:        streamStatusAuthStub{},
+		DS:          ds,
+		ChatHistory: historyStore,
+	}
+
+	reqBody := `{"model":"deepseek-chat","messages":[{"role":"system","content":"system instructions"},{"role":"user","content":"first user turn"},{"role":"assistant","content":"","reasoning_content":"hidden reasoning","tool_calls":[{"name":"search","arguments":{"query":"docs"}}]},{"role":"tool","name":"search","tool_call_id":"call-1","content":"tool result"},{"role":"user","content":"latest user turn"}],"stream":false}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
+	req.Header.Set("Authorization", "Bearer direct-token")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.ChatCompletions(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	snapshot, err := historyStore.Snapshot()
+	if err != nil {
+		t.Fatalf("snapshot failed: %v", err)
+	}
+	if len(snapshot.Items) != 1 {
+		t.Fatalf("expected one history item, got %d", len(snapshot.Items))
+	}
+	full, err := historyStore.Get(snapshot.Items[0].ID)
+	if err != nil {
+		t.Fatalf("expected detail item, got %v", err)
+	}
+	if full.HistoryText == "" {
+		t.Fatalf("expected history text to be persisted")
+	}
+	if !strings.Contains(full.HistoryText, "first user turn") || !strings.Contains(full.HistoryText, "tool result") {
+		t.Fatalf("expected earlier turns in history text, got %q", full.HistoryText)
+	}
+	if strings.Contains(full.HistoryText, "latest user turn") {
+		t.Fatalf("expected latest turn to stay out of persisted history text, got %q", full.HistoryText)
+	}
+	if len(ds.uploadCalls) != 1 {
+		t.Fatalf("expected history upload to happen, got %d", len(ds.uploadCalls))
+	}
+	if full.HistoryText != string(ds.uploadCalls[0].Data) {
+		t.Fatalf("expected persisted history text to match uploaded HISTORY.txt contents")
+	}
+}

@@ -181,11 +181,35 @@ function MergedPromptView({ item, t }) {
     )
 }
 
+function HistoryTextView({ item, t }) {
+    const historyText = (item?.history_text || '').trim()
+    if (!historyText) return null
+
+    return (
+        <div className="max-w-4xl mx-auto rounded-2xl border border-border bg-background px-5 py-4">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground mb-3 text-left">
+                HISTORY
+            </div>
+            <div className="text-sm leading-7 text-foreground whitespace-pre-wrap break-words font-mono">
+                <ExpandableText
+                    text={historyText}
+                    threshold={Math.floor(MESSAGE_COLLAPSE_AT / 4)}
+                    expandLabel={t('chatHistory.expand')}
+                    collapseLabel={t('chatHistory.collapse')}
+                    buttonClassName="text-foreground hover:text-muted-foreground"
+                />
+            </div>
+        </div>
+    )
+}
+
 function DetailConversation({ selectedItem, t, viewMode, detailScrollRef, assistantStartRef, bottomButtonClassName }) {
     if (!selectedItem) return null
 
     return (
         <>
+            <HistoryTextView item={selectedItem} t={t} />
+
             {viewMode === 'list'
                 ? <RequestMessages item={selectedItem} t={t} />
                 : <MergedPromptView item={selectedItem} t={t} />}

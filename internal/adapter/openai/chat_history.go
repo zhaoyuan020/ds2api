@@ -44,6 +44,7 @@ func startChatHistory(store *chathistory.Store, r *http.Request, a *auth.Request
 		Stream:      stdReq.Stream,
 		UserInput:   extractSingleUserInput(stdReq.Messages),
 		Messages:    extractAllMessages(stdReq.Messages),
+		HistoryText: stdReq.HistoryText,
 		FinalPrompt: stdReq.FinalPrompt,
 	})
 	startParams := chathistory.StartParams{
@@ -53,6 +54,7 @@ func startChatHistory(store *chathistory.Store, r *http.Request, a *auth.Request
 		Stream:      stdReq.Stream,
 		UserInput:   extractSingleUserInput(stdReq.Messages),
 		Messages:    extractAllMessages(stdReq.Messages),
+		HistoryText: stdReq.HistoryText,
 		FinalPrompt: stdReq.FinalPrompt,
 	}
 	session := &chatHistorySession{
